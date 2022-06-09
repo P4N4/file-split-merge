@@ -18,14 +18,10 @@ type fileinfo struct {
 	nameType string
 }
 
-var fileInfo fileinfo
-var files [][]byte
-var newFile []byte
-var splittedFile [][]byte
-
 //функция деления файла на фрагменты
 func splitFile(w http.ResponseWriter, r *http.Request) {
 
+	var splittedFile [][]byte
 	//загружаем файл через форму
 	r.ParseMultipartForm(10 << 20)
 
@@ -76,14 +72,6 @@ func splitFile(w http.ResponseWriter, r *http.Request) {
 		splittedFile = append(splittedFile, fileUploadded[a*i:a*(i+1)])
 	}
 
-	//обнуляем переменные, чтобы не было ошибок
-	defer func() {
-		splittedFile = nil
-		fileUploadded = nil
-		fileBytes = nil
-		return
-	}()
-
 	fileSizeToString := strconv.Itoa(int(handler.Size))
 	//записываем фрагменты
 	for i := 0; i <= len(splittedFile)-1; i++ {
@@ -99,6 +87,10 @@ func splitFile(w http.ResponseWriter, r *http.Request) {
 
 //функция, собирающая файл из фрагментов
 func mergeFiles(w http.ResponseWriter, r *http.Request) {
+
+	var newFile []byte
+	var files [][]byte
+	var fileInfo fileinfo
 
 	//получаем название файла из url
 	urlName := string(r.URL.RequestURI())
@@ -151,15 +143,7 @@ func mergeFiles(w http.ResponseWriter, r *http.Request) {
 
 	//окно скачивания файла
 	http.ServeFile(w, r, "./merged/"+veryNewUrl)
-	defer func() {
-		r = nil
-		w = nil
-		newFile = nil
-		files = nil
-		return
-	}()
 
-	return
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
